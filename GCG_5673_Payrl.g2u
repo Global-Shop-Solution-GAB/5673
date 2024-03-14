@@ -1,0 +1,838 @@
+Program.Sub.ScreenSU.Start
+Gui.frmMaint..Create
+Gui.frmMaint..Caption("Maintenance Screen")
+Gui.frmMaint..Size(8475,11205)
+Gui.frmMaint..MinX(0)
+Gui.frmMaint..MinY(0)
+Gui.frmMaint..Position(0,0)
+Gui.frmMaint..BackColor(-2147483633)
+Gui.frmMaint..MaxButton(False)
+Gui.frmMaint..MousePointer(0)
+Gui.frmMaint..Event(UnLoad,frmMaint_UnLoad)
+Gui.frmMaint.GsGridMaint.Create(GsGridControl)
+Gui.frmMaint.GsGridMaint.Size(7815,9645)
+Gui.frmMaint.GsGridMaint.Position(150,495)
+Gui.frmMaint.GsGridMaint.Event(RowCellClick,GsGridMaint_RowCellClick)
+Gui.frmMaint.GsGridMaint.Event(CellValueChanged,GsGridMaint_CellValueChanged)
+Gui.frmMaint.GsGridMaint.Event(RowClick,GsGridMaint_RowClick)
+Gui.frmMaint.cmdsave.Create(Button)
+Gui.frmMaint.cmdsave.Size(855,375)
+Gui.frmMaint.cmdsave.Position(165,10230)
+Gui.frmMaint.cmdsave.Caption("Save")
+Gui.frmMaint.cmdsave.Event(Click,cmdsave_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+
+'************************************************
+'Developer Ranjit Nair
+'Customer : First Engineering
+'Custom Overtime and Double Time Rules
+'*************************************************
+
+V.Local.sError.Declare(String)
+V.Global.bSave.Declare 
+	F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass,300)
+	
+	f.Intrinsic.Control.If(v.Caller.Switches,=,"M")
+		f.Intrinsic.Control.CallSub(launchmaint)
+		gui.frmMaint.cmdsave.Anchor(6)
+		gui.frmMaint.GsGridMaint.Anchor(7)
+		gui.frmMaint..Show 
+	f.Intrinsic.Control.ElseIf(v.Caller.Hook,=,"38120")
+	'Pre-Online update hook
+		f.Intrinsic.Control.CallSub(Calculate_Time)
+'	f.Intrinsic.Control.Else
+'		f.Intrinsic.Control.CallSub(Calculate_Time)
+	f.Intrinsic.Control.EndIf 
+	
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.frmMaint_UnLoad.Start
+F.Intrinsic.Control.SetErrorHandler("GsGridMaint_RowCellClick_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+variable.local.returnvalue.Declare(String)
+
+F.Intrinsic.Control.If(V.Global.bSave,=,True)
+	Function.Intrinsic.UI.MsgBox("Changes not saved, Do you want to save the changes ?", "Confirm", 4, variable.local.returnvalue)
+	F.Intrinsic.Control.If(variable.local.returnvalue,=,6)
+		f.Intrinsic.Control.CallSub(cmdsave_click)
+	f.Intrinsic.Control.EndIf 
+f.Intrinsic.Control.EndIf 
+
+f.Intrinsic.Control.CallSub(serialize)
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GsGridMaint_RowCellClick_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.frmMaint_UnLoad.End
+
+Program.Sub.GsGridMaint_RowCellClick.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSql.Declare(String)
+variable.local.sTitles.Declare 
+variable.local.sWidths.Declare 
+Variable.local.sRet.Declare 
+Variable.local.iRet.Declare 
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GsGridMaint_RowCellClick.End
+
+Program.Sub.GsGridMaint_CellValueChanged.Start
+F.Intrinsic.Control.SetErrorHandler("GsGridMaint_RowCellClick_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sRet.Declare(String)
+Variable.local.lRet.Declare
+Variable.local.lCRow.Declare
+
+F.Data.DataTable.AcceptChanges("DTHook")
+
+f.Intrinsic.Control.If(V.Args.column.Ucase,=,"DAYTEXT")
+	gui.frmMaint.GsGridMaint.GetCellValue("GVHook",1,V.Args.RowIndex,Variable.local.sRet)
+	f.Intrinsic.Control.If(Variable.local.sRet,=,"SUN")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,1)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"MON")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,2)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"TUE")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,3)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"WED")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,4)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"THU")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,5)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"FRI")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,6)
+	f.Intrinsic.Control.elseIf(Variable.local.sRet,=,"SAT")
+		gui.frmMaint.GsGridMaint.SetCellValue("GVHook",2,V.Args.RowIndex,7)
+	Function.Intrinsic.Control.EndIf
+	gui.frmMaint.GsGridMaint.setCellValue("GVHook",4,V.Args.RowIndex,"00:00:00")
+	gui.frmMaint.GsGridMaint.setCellValue("GVHook",5,V.Args.RowIndex,"00:00:00")
+'	F.Data.DataTable.SetValue("DTHook",V.Args.RowIndex,"LineNo",V.Args.RowIndex)
+	f.Intrinsic.Control.CallSub(ReNumber_Lines)
+f.Intrinsic.Control.elseIf(V.Args.column.Ucase,=,"START_TIME")
+'Function.Intrinsic.Debug.InvokeDebugger
+'Function.Intrinsic.Debug.Stop
+
+	gui.frmMaint.GsGridMaint.GetCellValue("GVHook",4,V.Args.RowIndex,Variable.local.sRet)
+	f.Intrinsic.String.Occurs(Variable.local.sRet,".",Variable.local.lRet)
+	f.Intrinsic.Control.If(Variable.local.lRet,>,0)
+		'split days from time
+		f.Intrinsic.String.Split(Variable.local.sRet,".",Variable.local.sRet)
+		gui.frmMaint.GsGridMaint.setCellValue("GVHook",4,V.Args.RowIndex,Variable.local.sRet(1))
+	f.Intrinsic.Control.endif
+	f.Intrinsic.Control.CallSub(ReNumber_Lines)
+	gui.frmMaint.GsGridMaint.GetCellValue("GVHook",8,V.Args.RowIndex,Variable.local.lCRow)
+
+	f.Intrinsic.Control.CallSub(Ratetype_Validate,"CROW",Variable.local.lCRow)
+f.Intrinsic.Control.elseIf(V.Args.column.Ucase,=,"END_TIME")
+	gui.frmMaint.GsGridMaint.GetCellValue("GVHook",5,V.Args.RowIndex,Variable.local.sRet)
+	f.Intrinsic.String.Occurs(Variable.local.sRet,".",Variable.local.lRet)
+	f.Intrinsic.Control.If(Variable.local.lRet,>,0)
+		f.Intrinsic.String.Split(Variable.local.sRet,".",Variable.local.sRet)
+		gui.frmMaint.GsGridMaint.setCellValue("GVHook",5,V.Args.RowIndex,Variable.local.sRet(1))
+	f.Intrinsic.Control.endif
+	f.Intrinsic.Control.CallSub(ReNumber_Lines)
+	gui.frmMaint.GsGridMaint.GetCellValue("GVHook",8,V.Args.RowIndex,Variable.local.lCRow)
+	
+	f.Intrinsic.Control.CallSub(Ratetype_Validate,"CROW",Variable.local.lCRow)
+Function.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GsGridMaint_RowCellClick_Err")
+'	
+'F.Intrinsic.Control.If(V.Ambient.ErrorNumber,=,121000)
+''	F.Data.DataTable.AcceptChanges("DTHook")
+
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,=,121000)
+'no row in datatable
+F.Intrinsic.Control.elseIf(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GsGridMaint_CellValueChanged.End
+
+Program.Sub.cmdsave_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+
+V.Local.sError.Declare(String)
+v.Local.sRet.Declare
+v.Local.icnt.Declare
+v.Local.ssql.Declare
+
+
+	v.Local.sRet.set("Dept is null")
+	f.Data.DataTable.Select("DTHook",v.Local.sRet,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"***NORETURN***")
+		f.Intrinsic.UI.Msgbox("Dept cannot be Blank")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		gui.frmMaint.GsGridMaint.FocusCell("GVHook",v.Local.sRet(0),0)
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.endif
+
+	v.Local.sRet.set("DayText is null")
+	f.Data.DataTable.Select("DTHook",v.Local.sRet,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"***NORETURN***")
+		f.Intrinsic.UI.Msgbox("Day cannot be Blank")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		gui.frmMaint.GsGridMaint.FocusCell("GVHook",v.Local.sRet(0),1)
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.endif
+	
+	v.Local.sRet.set("Tran_Type is null")
+	f.Data.DataTable.Select("DTHook",v.Local.sRet,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"***NORETURN***")
+		f.Intrinsic.UI.Msgbox("Type cannot be Blank")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		gui.frmMaint.GsGridMaint.FocusCell("GVHook",v.Local.sRet(0),3)
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.endif
+	
+	v.Local.sRet.set("Start_Time is null")
+	f.Data.DataTable.Select("DTHook",v.Local.sRet,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"***NORETURN***")
+		f.Intrinsic.UI.Msgbox("Start Time cannot be Blank")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		gui.frmMaint.GsGridMaint.FocusCell("GVHook",v.Local.sRet(0),4)
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.endif
+	
+	v.Local.sRet.set("End_Time is null")
+	f.Data.DataTable.Select("DTHook",v.Local.sRet,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"***NORETURN***")
+		f.Intrinsic.UI.Msgbox("End Time cannot be Blank")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		gui.frmMaint.GsGridMaint.FocusCell("GVHook",v.Local.sRet(0),5)
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.endif
+
+	'datatable saveDB not saving Time datatype
+	F.ODBC.Connection!Con.Execute("delete from GCG_5673_Maint")
+	f.Intrinsic.Control.For(v.Local.icnt,0,v.DataTable.DTHOOK.RowCount--,1)
+		f.Intrinsic.String.Build("Insert Into GCG_5673_Maint Values('{0}',{1},'{2}','{3}','{4}')",v.DataTable.DTHOOK(v.Local.icnt).Dept!FieldVal,v.DataTable.DTHOOK(v.Local.icnt).Day!FieldVal,v.DataTable.DTHOOK(v.Local.icnt).Start_Time!FieldVal,v.DataTable.DTHOOK(v.Local.icnt).End_Time!FieldVal,v.DataTable.DTHOOK(v.Local.icnt).Tran_Type!FieldVal,v.Local.ssql)
+		F.ODBC.Connection!Con.Execute(V.Local.sSQL)
+	f.Intrinsic.Control.Next(v.Local.icnt)
+	gui.frmMaint.cmdsave.Enabled(false)
+	f.Intrinsic.UI.Msgbox("Records saved successfully")
+	gui.frmMaint.cmdsave.Enabled(true)
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdsave_Click.End
+
+Program.Sub.LaunchMaint.Start
+F.Intrinsic.Control.SetErrorHandler("LaunchMaint_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+v.Local.sRet.Declare
+
+
+	V.Local.sSql.Set("select Dept,' ' as DayText,Day,Tran_Type,Start_Time,End_Time from GCG_5673_Maint order by Day,Start_Time")
+
+	F.Data.DataTable.CreateFromSQL("DTHook","Con",v.Local.sSql,True)
+	F.Data.DataView.Create("DTHook","DVHook")
+
+	
+	f.ODBC.Connection!con.executeandreturn("select Dept_ID from DEPARTMENTS",v.Local.sRet)
+	f.Intrinsic.String.Replace(v.Local.sRet,"#$#","*!*",v.Local.sRet)
+
+	
+	Function.Data.Dictionary.Create("DICRT")
+	Function.Data.Dictionary.AddItem("DICRT","1","SUN")
+	Function.Data.Dictionary.AddItem("DICRT","2","MON")
+	Function.Data.Dictionary.AddItem("DICRT","3","TUE")
+	Function.Data.Dictionary.AddItem("DICRT","4","WED")
+	Function.Data.Dictionary.AddItem("DICRT","5","THU")
+	Function.Data.Dictionary.AddItem("DICRT","6","FRI")
+	Function.Data.Dictionary.AddItem("DICRT","7","SAT")
+	
+
+	f.Data.DataTable.AddExpressionColumn("DTHook","newStarttime","DateTime","'1/1/001 ' + [Start_Time]")
+	f.Data.DataTable.AddExpressionColumn("DTHook","newendtime","string","'1/1/001 ' + [End_Time]")
+	
+	f.Data.DataTable.AddColumn("DTHook","LineNo","long")
+	
+	'won't work if using inbuilt gridview button to add row
+	F.Data.DataTable.SetSeries("DTHook","LineNo", 0, 1)
+'	f.Intrinsic.Control.CallSub(ReNumber_Lines)
+	
+'	Function.Data.DataTable.SetValueFormat("DTHook",-1,"Start_Time","Start_Time","hh:nn:ss")
+	
+	F.Data.DataTable.FillFromDictionary("DTHook","DICRT","Day","DayText")
+
+	gui.frmMaint.GsGridMaint.AddGridViewFromDataView("GVHook","DTHook","DVHook")
+
+
+	gui.frmMaint.GsGridMaint.SetGridviewProperty("GVHook","AllowAddRows",True)
+	gui.frmMaint.GsGridMaint.SetGridviewProperty("GVHook","AllowDeleteRows",True)
+	gui.frmMaint.GsGridMaint.SetGridviewProperty("GVHook","Editable",true)
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","HeaderFontBold","True")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","DayText","HeaderFontBold","True")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Day","HeaderFontBold","True")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Start_Time","HeaderFontBold","True")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","End_Time","HeaderFontBold","True")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","HeaderFontBold","True")
+	
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","HeaderBackColor","#d3d3d3")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","DayText","HeaderBackColor","#d3d3d3")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Day","HeaderBackColor","#d3d3d3")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Start_Time","HeaderBackColor","#d3d3d3")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","End_Time","HeaderBackColor","#d3d3d3")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","HeaderBackColor","#d3d3d3")
+	
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","DayText","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","DayText","ReadOnly",False)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","ReadOnly",False)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","ReadOnly",False)
+	
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Start_Time","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Start_Time","ReadOnly",False)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","End_Time","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","End_Time","ReadOnly",False)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","AllowEdit",True)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","ReadOnly",False)
+	
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Day","AllowEdit",False)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Day","ReadOnly",True)
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","MinWidth",60)
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Dept","Caption","Dept")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Day","Caption","Day")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Start_Time","Caption","Start Time")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","End_Time","Caption","End Time")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","Tran_Type","Caption","Type")
+'	
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","newStarttime","visible",false)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","newEndtime","visible",false)
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook","LineNo","visible",false)
+	
+	gui.frmMaint.GsGridMaint.ColumnEdit("GVHook","Dept","DropDownList",v.Local.sRet)
+	gui.frmMaint.GsGridMaint.ColumnEdit("GVHook","DayText","DropDownList","SUN*!*MON*!*TUE*!*WED*!*THU*!*FRI*!*SAT")
+	gui.frmMaint.GsGridMaint.ColumnEdit("GVHook","Tran_Type","DropDownList","R*!*O*!*2")
+
+	
+	gui.frmMaint.GsGridMaint.SetGridViewProperty("GVHook", "OptionsSelectionEnableAppearanceFocusedRow", "False") 
+
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook", "Start_Time", "DisplayCustomDatetime", "t")
+	gui.frmMaint.GsGridMaint.SetColumnProperty("GVHook", "End_Time", "DisplayCustomDatetime", "T")
+	
+	gui.frmMaint.GsGridMaint.SetGridViewProperty("GVHook","OptionsViewShowAutoFilterRow",True)
+	gui.frmMaint.GsGridMaint.MainView("GVHook")
+	
+'	Function.Data.DataTable.AddRowChangedEventHandler("DTHook","Ratetype_Validate")
+	f.Intrinsic.Control.CallSub(deserialize)	
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("LaunchMaint_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4443_GUIScriptMaint.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.LaunchMaint.End
+
+Program.Sub.GsGridMaint_RowClick.Start
+'	f.Intrinsic.UI.Msgbox("")
+Program.Sub.GsGridMaint_RowClick.End
+
+Program.Sub.Calculate_Time.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+v.Local.sSql.Declare
+v.Local.sfilter.Declare
+v.Local.sRet.Declare
+v.Local.iCount.Declare
+v.Local.dDate.Declare
+v.Local.i.Declare
+v.Local.lDay.Declare
+v.Local.fTimediff.Declare
+v.Local.bfEnt.Declare
+v.Local.dJobfinishtime.Declare
+v.Local.dJobStarttime.Declare
+v.Local.dMaintEndttime.Declare
+	
+	f.Data.DataTable.Create("DTAddJob",true)
+	f.Data.DataTable.AddColumn("DTAddJob","Job","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Suffix","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Seq","string")
+	f.Data.DataTable.AddColumn("DTAddJob","RType","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Starttime","DateTime")
+	f.Data.DataTable.AddColumn("DTAddJob","Endtime","DateTime")
+	f.Data.DataTable.AddColumn("DTAddJob","Qty","Long")
+	f.Data.DataTable.AddColumn("DTAddJob","Qty_Actual","Long")
+	f.Data.DataTable.AddColumn("DTAddJob","ScrapQty","Long")
+	f.Data.DataTable.AddColumn("DTAddJob","SCRAP_REASON","string")
+	
+	f.Data.DataTable.AddColumn("DTAddJob","Employee","string")
+	f.Data.DataTable.AddColumn("DTAddJob","WorkCenter","string")
+	f.Data.DataTable.AddColumn("DTAddJob","TranDate","string")
+	f.Data.DataTable.AddColumn("DTAddJob","flag_closed","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Flag_Indirect","string")
+	
+	'For Comments
+	f.Data.DataTable.AddColumn("DTAddJob","Text_Comment","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Text_Seq","string")
+	f.Data.DataTable.AddColumn("DTAddJob","Text_shared","string")
+
+
+	'key to delete
+	f.Data.DataTable.Create("DTDelJob",true)
+	f.Data.DataTable.AddColumn("DTDelJob","Job","string")
+	f.Data.DataTable.AddColumn("DTDelJob","Suffix","string")
+	f.Data.DataTable.AddColumn("DTDelJob","Seq","string")
+	f.Data.DataTable.AddColumn("DTDelJob","Employee","string")
+	f.Data.DataTable.AddColumn("DTDelJob","SEQ_Key","long")
+	f.Data.DataTable.AddColumn("DTDelJob","Trmnl","string")
+	
+	
+	
+	
+	V.Local.sSql.Set("select Dept,' ' as DayText,Day,Tran_Type,concat('1/1/001 ',Start_Time) as newStarttime,concat('1/1/001 ',End_Time) as newEndtime from GCG_5673_Maint  ")
+	
+	F.Data.DataTable.CreateFromSQL("DTMaint","Con",v.Local.sSql,True)
+	
+
+	
+	V.Local.sSql.Set("select date_Transaction,JOB,SUFFIX,Sequence,WorkCenter,flag_closed,Flag_Indirect,employee,pieces_good,pieces_scrap,REPLACE(start_time,'.',':') as StartTime1, REPLACE(finish_time ,'.',':') as finishtime1, concat('1/1/001 ',REPLACE(start_time,'.',':')) as StartTime, concat('1/1/001 ',REPLACE(finish_time ,'.',':')) as finishtime ,dept_employee,Rate_type,SCRAP_REASON,Terminal_no,Sequence_key,jbo_from,Text_Comment,Text_Seq,Text_shared from  v_JOBS_IN_PROCESS where jbo_from <> 'JB0455'")
+'	V.Local.sSql.Set("select date_Transaction,JOB,SUFFIX,Sequence,WorkCenter,flag_closed,Flag_Indirect,employee,pieces_good,pieces_scrap,REPLACE(start_time,'.',':') as StartTime1, REPLACE(finish_time ,'.',':') as finishtime1 ,dept_employee,Rate_type,SCRAP_REASON,Terminal_no,Sequence_key,jbo_from from  v_JOBS_IN_PROCESS where jbo_from <> 'JB0455'")
+
+	F.Data.DataTable.CreateFromSQL("DTJob","Con",v.Local.sSql,True)
+	
+	f.Data.DataTable.AddExpressionColumn("DTJob","StartTime2","DateTime","'1/1/001 ' + [StartTime1]")
+	f.Data.DataTable.AddExpressionColumn("DTJob","finishtime2","DateTime","'1/1/001 ' + [finishtime1]")
+	
+	f.Intrinsic.Control.CallSub(Validate_Dayspill)
+
+''****************update all job
+'	F.Data.DataView.Create("DTJob","DVJob")
+'	Function.Data.DataView.ToDataTableDistinct("DTJob","DVJob","DTPROCESS","JOB*!*SUFFIX*!*Sequence*!*Terminal_no*!*Sequence_key*!*jbo_from*!*employee")
+'	f.Data.DataTable.SetValue("DTPROCESS",-1,"jbo_from","JB0455")
+'	F.Data.DataTable.SaveToDB("DTPROCESS","con","JOBS_IN_PROCESS","JOB*!*SUFFIX*!*Sequence*!*Terminal_no*!*Sequence_key*!*employee",256,"JOB@!@JOB*!*SUFFIX@!@SUFFIX*!*Sequence@!@Sequence*!*Terminal_no@!@Terminal_no*!*Sequence_key@!@Sequence_key*!*jbo_from@!@jbo_from*!*employee@!@employee")
+'	f.Data.DataTable.Close("DTPROCESS")
+
+'Text_Comment,Text_Seq,Text_shared,Crew_ID,Scrap_Quality,Scrap_Ref_Date,Scrap_Ref_Time
+
+	F.Data.DataView.Create("DTJob","DVJob")
+	Function.Data.DataView.ToDataTableDistinct("DTJob","DVJob","DTPROCESS","JOB*!*SUFFIX*!*Sequence*!*Terminal_no*!*Sequence_key*!*jbo_from*!*employee")
+	f.Data.DataTable.SetValue("DTPROCESS",-1,"jbo_from","JB0455")
+	F.Data.DataTable.SaveToDB("DTPROCESS","con","JOBS_IN_PROCESS","JOB*!*SUFFIX*!*Sequence*!*Terminal_no*!*Sequence_key*!*employee",256,"JOB@!@JOB*!*SUFFIX@!@SUFFIX*!*Sequence@!@Sequence*!*Terminal_no@!@Terminal_no*!*Sequence_key@!@Sequence_key*!*jbo_from@!@jbo_from*!*employee@!@employee")
+	f.Data.DataTable.Close("DTPROCESS")
+''****************************
+	
+	f.Intrinsic.Control.for(v.Local.i,0,V.DataTable.DTJob.RowCount--)
+	
+		f.Intrinsic.Date.Weekday(V.DataTable.DTJob(v.Local.i).date_Transaction!FieldVal,v.Local.lDay)
+		v.Local.dJobStarttime.Set(V.DataTable.DTJob(v.Local.i).StartTime!FieldVal)
+		v.Local.dJobfinishtime.Set(V.DataTable.DTJob(v.Local.i).finishtime!FieldVal)
+		
+		'24hr format
+'		f.Intrinsic.String.Format(V.DataTable.DTJob(v.Local.i).StartTime!FieldVal,"HH:mm",v.Local.sRet)
+	
+'		f.Intrinsic.String.Build("(newStarttime >= #{0}# or newEndtime <= #{3}#) and Day={1} and Dept='{2}'",V.DataTable.DTJob(v.Local.i).StartTime!FieldVal,v.Local.lDay,V.DataTable.DTJob(v.Local.i).dept_employee!FieldVal,V.DataTable.DTJob(v.Local.i).finishtime!FieldVal,v.Local.sfilter)
+
+		f.Intrinsic.String.Build("(newEndtime >= #{0}#  and newStarttime <= #{3}# )  and Day={1} and Dept='{2}'",V.DataTable.DTJob(v.Local.i).StartTime!FieldVal,v.Local.lDay,V.DataTable.DTJob(v.Local.i).dept_employee!FieldVal,V.DataTable.DTJob(v.Local.i).finishtime!FieldVal,v.Local.sfilter)
+
+		v.Local.bfEnt.Set(false)
+		F.Data.DataView.Create("DTMaint","DVMaint",22,v.Local.sfilter,"newStarttime,newEndtime")
+
+			
+		f.Intrinsic.Control.for(v.Local.iCount,0,v.DataView.DTMaint!DVMaint.RowCount--)
+			f.Intrinsic.Control.If(v.DataView.DTMaint!DVMaint(v.Local.iCount).newEndtime!FieldVal,>=,v.Local.dJobfinishtime)
+				'insert to pieces_good  pieces_scrap
+'			Function.Data.DataTable.AddRowByMap("DTAddJob","Job*!*Suffix*!*Seq*!*Rtype*!*Starttime*!*Endtime*!*Qty*!*ScrapQty*!*SCRAP_REASON*!*Flag_Indirect*!*flag_closed*!*employee*!*TranDate*!*WorkCenter*!*Qty_Actual",V.DataTable.DTJob(v.Local.i).JOB!FieldVal,V.DataTable.DTJob(v.Local.i).SUFFIX!FieldVal,V.DataTable.DTJob(v.Local.i).Sequence!FieldVal,v.DataView.DTMaint!DVMaint(v.Local.iCount).Tran_Type!FieldVal,v.Local.dJobStarttime,v.Local.dJobfinishtime,0,V.DataTable.DTJob(v.Local.i).pieces_scrap!FieldVal,V.DataTable.DTJob(v.Local.i).SCRAP_REASON!FieldVal,V.DataTable.DTJob(v.Local.i).Flag_Indirect!FieldVal,V.DataTable.DTJob(v.Local.i).flag_closed!FieldVal,V.DataTable.DTJob(v.Local.i).employee!FieldVal,V.DataTable.DTJob(v.Local.i).date_Transaction!FieldVal,V.DataTable.DTJob(v.Local.i).WorkCenter!FieldVal,V.DataTable.DTJob(v.Local.i).pieces_good!FieldVal)
+			
+			Function.Data.DataTable.AddRowByMap("DTAddJob","Job*!*Suffix*!*Seq*!*Rtype*!*Starttime*!*Endtime*!*Qty*!*ScrapQty*!*SCRAP_REASON*!*Flag_Indirect*!*flag_closed*!*employee*!*TranDate*!*WorkCenter*!*Qty_Actual*!*Text_Comment*!*Text_Seq*!*Text_shared",V.DataTable.DTJob(v.Local.i).JOB!FieldVal,V.DataTable.DTJob(v.Local.i).SUFFIX!FieldVal,V.DataTable.DTJob(v.Local.i).Sequence!FieldVal,v.DataView.DTMaint!DVMaint(v.Local.iCount).Tran_Type!FieldVal,v.Local.dJobStarttime,v.Local.dJobfinishtime,0,V.DataTable.DTJob(v.Local.i).pieces_scrap!FieldVal,V.DataTable.DTJob(v.Local.i).SCRAP_REASON!FieldVal,V.DataTable.DTJob(v.Local.i).Flag_Indirect!FieldVal,V.DataTable.DTJob(v.Local.i).flag_closed!FieldVal,V.DataTable.DTJob(v.Local.i).employee!FieldVal,V.DataTable.DTJob(v.Local.i).date_Transaction!FieldVal,V.DataTable.DTJob(v.Local.i).WorkCenter!FieldVal,V.DataTable.DTJob(v.Local.i).pieces_good!FieldVal,V.DataTable.DTJob(v.Local.i).Text_Comment!FieldVal,V.DataTable.DTJob(v.Local.i).Text_Seq!FieldVal,V.DataTable.DTJob(v.Local.i).Text_shared!FieldVal)
+
+			v.Local.bfEnt.Set(True)	
+		f.Intrinsic.Control.Else
+			Function.Data.DataTable.AddRowByMap("DTAddJob","Job*!*Suffix*!*Seq*!*Rtype*!*Starttime*!*Endtime*!*Flag_Indirect*!*flag_closed*!*employee*!*TranDate*!*WorkCenter*!*Qty_Actual",V.DataTable.DTJob(v.Local.i).JOB!FieldVal,V.DataTable.DTJob(v.Local.i).SUFFIX!FieldVal,V.DataTable.DTJob(v.Local.i).Sequence!FieldVal,v.DataView.DTMaint!DVMaint(v.Local.iCount).Tran_Type!FieldVal,v.Local.dJobStarttime,v.DataView.DTMaint!DVMaint(v.Local.iCount).newEndtime!FieldVal,V.DataTable.DTJob(v.Local.i).Flag_Indirect!FieldVal,V.DataTable.DTJob(v.Local.i).flag_closed!FieldVal,V.DataTable.DTJob(v.Local.i).employee!FieldVal,V.DataTable.DTJob(v.Local.i).date_Transaction!FieldVal,V.DataTable.DTJob(v.Local.i).WorkCenter!FieldVal,V.DataTable.DTJob(v.Local.i).pieces_good!FieldVal)	
+			f.Intrinsic.Date.DateAdd("N",1,v.DataView.DTMaint!DVMaint(v.Local.iCount).newEndtime!FieldVal,v.Local.dJobStarttime)
+		f.Intrinsic.Control.endif
+		
+		f.Intrinsic.Control.If(v.Local.bfEnt,=,True)
+			'add delete job key
+			Function.Data.DataTable.AddRowByMap("DTDelJob","Job*!*Suffix*!*Seq*!*employee*!*SEQ_Key*!*Trmnl",V.DataTable.DTJob(v.Local.i).JOB!FieldVal,V.DataTable.DTJob(v.Local.i).SUFFIX!FieldVal,V.DataTable.DTJob(v.Local.i).Sequence!FieldVal,V.DataTable.DTJob(v.Local.i).employee!FieldVal,V.DataTable.DTJob(v.Local.i).Sequence_key!FieldVal,V.DataTable.DTJob(v.Local.i).Terminal_no!FieldVal)	
+			f.Intrinsic.Control.ExitFor(v.Local.iCount)
+		f.Intrinsic.Control.endif
+		
+		f.Intrinsic.Control.Next(v.Local.iCount)
+		
+		f.Data.DataView.Close("DTMaint","DVMaint")
+	f.Intrinsic.Control.Next(v.Local.i)
+	f.Data.DataTable.Close("DTMaint")
+	f.Data.DataTable.Close("DTJob")
+
+	f.Intrinsic.Control.If(v.DataTable.DTAddJob.RowCount,>,0)
+		f.Intrinsic.Control.CallSub(Upload_JobData)
+	f.Intrinsic.Control.Else
+		f.Data.DataTable.Close("DTAddJob")
+		f.Data.DataTable.Close("DTDelJob")
+	f.Intrinsic.Control.endif
+	
+	F.ODBC.Connection!con.Close
+	f.Intrinsic.Control.End
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("{0} Subroutine:{1} Error Occurred {2} with description {3}",v.Ambient.Now,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	f.Intrinsic.Control.CallSub(Error_Log,"ERRMSG",V.Local.sError)
+	F.Intrinsic.Control.EndTry
+Program.Sub.Calculate_Time.End
+
+Program.Sub.Upload_JobData.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+v.Local.icnt.Declare
+v.Local.sStartime.Declare
+v.Local.sEndtime.Declare
+v.Local.sRet.Declare
+V.Local.sDate.Declare
+V.Local.sLine.Declare
+V.Local.sFile.Declare
+V.Local.sExecute.Declare
+V.local.fScrapQty.Declare
+V.local.fQty.Declare
+V.Local.sSQL.Declare
+v.Local.lQty.Declare
+v.Local.lCurrQty.Declare
+v.Local.sfilter.Declare
+v.Local.iCount.Declare
+
+
+'============Distribute QTY
+F.Data.DataView.Create("DTAddJob","DVJob",22,"","Starttime,Endtime")
+Function.Data.DataView.ToDataTableDistinct("DTAddJob","DVJob","DTQTY","JOB*!*Suffix*!*Qty_Actual")
+f.Intrinsic.Control.For(v.Local.iCount,0,v.DataTable.DTQTY.RowCount--,1)
+	v.Local.lQty.Set(V.Datatable.DTQTY(v.Local.iCount).Qty_Actual!FieldVal)
+	f.Intrinsic.String.Build("JOB = '{0}' and Suffix = '{1}'",v.DataTable.DTQTY(v.Local.iCount).JOB!FieldVal,v.DataTable.DTQTY(v.Local.iCount).Suffix!FieldVal,v.Local.sfilter)
+	v.Local.lCurrQty.Set(1)
+	f.Intrinsic.Control.DoUntil(v.Local.lQty,=,0)
+		F.Data.DataView.SetFilter("DTAddJob","DVJob",v.Local.sfilter)
+		f.Intrinsic.Control.For(v.Local.icnt,0,v.Dataview.DTAddJob!DVJob.RowCount--)
+			f.Intrinsic.Control.If(v.Local.lQty,=,0)
+				f.Intrinsic.Control.ExitFor(v.Local.icnt)
+			f.Intrinsic.Control.EndIf
+			Function.Data.Dataview.SetValue("DTAddJob","DVJob",v.Local.icnt,"QTY",v.Local.lCurrQty)
+			f.Intrinsic.Math.Sub(v.Local.lQty,1,v.Local.lQty)
+		f.Intrinsic.Control.Next(v.Local.icnt)
+		f.Intrinsic.Math.Add(v.Local.lCurrQty,1,v.Local.lCurrQty)
+	f.Intrinsic.Control.Loop
+f.Intrinsic.Control.Next(v.Local.iCount)
+f.Data.Dataview.Close("DTAddJob","DVJob")
+f.Data.DataTable.Close("DTQTY")
+'========================================
+
+
+f.Intrinsic.Control.For(v.Local.icnt,0,v.DataTable.DTAddJob.RowCount--,1)
+
+		f.Intrinsic.String.Format(v.DataTable.DTAddJob(v.Local.icnt).Starttime!FieldVal,"HH:mm",v.Local.sStartime)
+		f.Intrinsic.String.replace(v.Local.sStartime,":","",v.Local.sStartime)
+		
+		f.Intrinsic.String.Format(v.DataTable.DTAddJob(v.Local.icnt).Endtime!FieldVal,"HH:mm",v.Local.sEndtime)
+		f.Intrinsic.String.replace(v.Local.sEndtime,":","",v.Local.sEndtime)
+		
+		F.Intrinsic.String.Format(v.DataTable.DTAddJob(v.Local.icnt).TranDate!FieldVal,"MMDDYY",V.Local.sDate)
+		
+'		Function.Intrinsic.String.Format(v.DataTable.DTAddJob(v.Local.icnt).ScrapQty!FieldValTrim,"####.0000", V.local.sScrapQty)
+'		Function.Intrinsic.String.Format(v.DataTable.DTAddJob(v.Local.icnt).Qty!FieldValTrim,"####.0000", V.local.sQty)
+		
+		f.Intrinsic.Math.Mult(v.DataTable.DTAddJob(v.Local.icnt).Qty!FieldVal,10000,V.local.fQty)
+		f.Intrinsic.Math.Mult(v.DataTable.DTAddJob(v.Local.icnt).ScrapQty!FieldVal,10000,V.local.fScrapQty)
+
+	'date, employee, job, suffix, seq, workcenter, hours, closed, indirect, start time, finish time, rate type, good pieces, scrap, scrap code
+
+	F.Intrinsic.String.Build("{1}{2}{0}{3}{0}{4}{0}{5}{0}{6}{0}{7}{0}{8}{0}{9}{0}{10}{0}{11}{0}{12}{0}{13}{0}{14}{0}{15}{0}{16}{0}{17}",V.Ambient.Tab,V.Local.sLine,V.Local.sDate.Trim,v.DataTable.DTAddJob(v.Local.icnt).Employee!FieldValTrim,v.DataTable.DTAddJob(v.Local.icnt).Job!FieldValTrim,v.DataTable.DTAddJob(v.Local.icnt).Suffix!FieldValTrim,v.DataTable.DTAddJob(v.Local.icnt).Seq!FieldValTrim,v.DataTable.DTAddJob(v.Local.icnt).workcenter!FieldValTrim,"0",v.DataTable.DTAddJob(v.Local.icnt).flag_closed!FieldValTrim,v.DataTable.DTAddJob(v.Local.icnt).Flag_Indirect!FieldValTrim,v.Local.sStartime,v.Local.sEndtime,v.DataTable.DTAddJob(v.Local.icnt).Rtype!FieldValTrim,V.local.fQty,V.local.fScrapQty,v.DataTable.DTAddJob(v.Local.icnt).SCRAP_REASON!FieldValTrim,V.Ambient.NewLine,V.Local.sLine)
+
+f.Intrinsic.Control.Next(v.Local.icnt)
+
+f.Intrinsic.Control.for(v.Local.icnt,0,V.DataTable.DTDelJob.RowCount--)
+	f.Intrinsic.String.Build("delete from JOBS_IN_PROCESS where job = '{0}' and suffix = '{1}' and sequence = '{2}' and employee = '{3}' and terminal_no = '{4}' and sequence_key = '{5}'",v.DataTable.DTDelJob(v.Local.icnt).JOB!FieldValTrim,v.DataTable.DTDelJob(v.Local.icnt).SUFFIX!FieldValTrim,v.DataTable.DTDelJob(v.Local.icnt).Seq!FieldValTrim,v.DataTable.DTDelJob(v.Local.icnt).Employee!FieldValTrim,v.DataTable.DTDelJob(v.Local.icnt).Trmnl!FieldValTrim,v.DataTable.DTDelJob(v.Local.icnt).Seq_key!FieldValTrim,V.Local.sSQL)
+	f.ODBC.Connection!con.execute(V.Local.sSQL)
+f.Intrinsic.Control.Next(v.Local.icnt)	
+
+'JB0455
+	F.Intrinsic.String.Concat(V.Caller.FilesDir,"\",V.Caller.CompanyCode,V.Caller.Terminal,"MOPEN.txt",V.Local.sFile)
+	F.Intrinsic.File.String2File(V.Local.sFile,V.Local.sLine)
+	F.Intrinsic.String.Concat(V.Caller.CompanyCode,V.Caller.Terminal,"MOPEN.txt",V.Local.sExecute)
+	F.Intrinsic.Task.LaunchGSSSync("JB0455","-c",V.Local.sExecute)
+	
+	'update comments
+	
+	F.Data.DataView.Create("DTAddJob","DVJob",22,"Text_Comment='Y'","")
+	f.Intrinsic.Control.If(v.DataView.DTAddJob!DVJob.RowCount,>,0)
+		f.Intrinsic.Control.for(v.Local.iCount,0,v.DataView.DTAddJob!DVJob.RowCount--)
+			f.Intrinsic.String.Build("select * from JOBS_IN_PROCESS where job = '{0}' and suffix = '{1}' and sequence = '{2}'",v.DataView.DTAddJob!DVJob(v.Local.iCount).JOB!FieldVal,v.DataView.DTAddJob!DVJob(v.Local.iCount).SUFFIX!FieldVal,v.DataView.DTAddJob!DVJob(v.Local.iCount).Seq!FieldVal,V.Local.sSQL)
+			F.ODBC.Connection!con.OpenRecordsetRW("rst",V.Local.sSQL)
+			F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+				F.ODBC.con!rst.Set!Text_Comment("Y")
+				F.ODBC.con!rst.Set!Text_Shared(v.DataView.DTAddJob!DVJob(v.Local.iCount).Text_Shared!FieldValTrim)
+				F.ODBC.con!rst.Set!Text_SEQ(v.DataView.DTAddJob!DVJob(v.Local.iCount).Text_SEQ!FieldValTrim)
+				F.ODBC.con!rst.Update
+			F.Intrinsic.Control.EndIf
+			F.ODBC.con!rst.Close
+		f.Intrinsic.Control.Next(v.Local.iCount)
+	f.Intrinsic.Control.EndIf
+
+f.Data.Dataview.Close("DTAddJob","DVJob")
+f.Data.DataTable.Close("DTAddJob")
+f.Data.DataTable.Close("DTDelJob")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("{0} Subroutine:{1} Error Occurred {2} with description {3}",v.Ambient.Now,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	f.Intrinsic.Control.CallSub(Error_Log,"ERRMSG",V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.Upload_JobData.End
+
+Program.Sub.Ratetype_Validate.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+v.Local.sfilter.Declare
+v.Local.sfilter1.Declare
+Variable.local.sStart.Declare(date)
+Variable.local.sEnd.Declare(date)
+Variable.local.i.Declare
+
+
+f.Intrinsic.String.Build("lineNo <> {0} and Day={1} and Dept='{2}'",v.Args.CROW,V.DataTable.DTHook(v.Args.CROW).Day!FieldVal,V.DataTable.DTHook(v.Args.CROW).Dept!FieldVal,v.Local.sfilter1)
+f.Intrinsic.String.Build("(newStarttime <= #1/1/001 {0}# and {1})",V.DataTable.DTHook(v.Args.CROW).newStarttime!FieldVal,v.Local.sfilter1,v.Local.sfilter)
+
+Variable.local.sStart.Set(V.DataTable.DTHook(v.Args.CROW).newStarttime!FieldVal)
+Variable.local.sEnd.Set(V.DataTable.DTHook(v.Args.CROW).newEndtime!FieldVal)
+
+
+F.Data.DataView.Create("DTHook","DVValidate",22,v.Local.sfilter,"")
+f.Intrinsic.Control.If(v.DataView.DTHook!DVValidate.RowCount,>,0)
+	f.Intrinsic.Control.For(Variable.local.i,0,v.DataView.DTHook!DVValidate.RowCount--,1)
+		f.Intrinsic.Control.If(V.DataView.DTHook!DVValidate(Variable.local.i).newEndtime!FieldVal,>=,Variable.local.sStart)
+			f.Intrinsic.UI.Msgbox("Invalid")
+			gui.frmMaint.cmdsave.Enabled(false)
+			f.Intrinsic.Control.GoTo("LabelExit")
+			f.Intrinsic.Control.ExitFor(v.Local.i)
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Next(v.Local.i)
+
+	f.Intrinsic.String.Build("(newStarttime >= #1/1/001 {0}# and {1})",V.DataTable.DTHook(v.Args.CROW).newStarttime!FieldVal,v.Local.sfilter1,v.Local.sfilter)
+	F.Data.DataView.SetFilter("DTHook","DVValidate",v.Local.sfilter)
+	f.Intrinsic.Control.If(v.DataView.DTHook!DVValidate.RowCount,>,0)
+		f.Intrinsic.Control.For(Variable.local.i,0,v.DataView.DTHook!DVValidate.RowCount--,1)
+			f.Intrinsic.Control.If(V.DataView.DTHook!DVValidate(Variable.local.i).newEndtime!FieldVal,<=,Variable.local.sStart)
+				f.Intrinsic.UI.Msgbox("Invalid2")
+				gui.frmMaint.cmdsave.Enabled(false)
+				f.Intrinsic.Control.GoTo("LabelExit")
+				f.Intrinsic.Control.ExitFor(v.Local.i)
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.Next(v.Local.i)
+	f.Intrinsic.Control.EndIf
+	
+f.Intrinsic.Control.Else
+	f.Intrinsic.String.Build("(newStarttime >= #1/1/001 {0}# and {1})",V.DataTable.DTHook(v.Args.CROW).newStarttime!FieldVal,v.Local.sfilter1,v.Local.sfilter)
+	F.Data.DataView.SetFilter("DTHook","DVValidate",v.Local.sfilter)
+	f.Intrinsic.Control.If(v.DataView.DTHook!DVValidate.RowCount,>,0)
+		f.Intrinsic.Control.For(Variable.local.i,0,v.DataView.DTHook!DVValidate.RowCount--,1)
+			f.Intrinsic.Control.If(V.DataView.DTHook!DVValidate(Variable.local.i).newStarttime!FieldVal,<=,Variable.local.sEnd)
+				f.Intrinsic.UI.Msgbox("Invalid23")
+				gui.frmMaint.cmdsave.Enabled(false)
+				f.Intrinsic.Control.GoTo("LabelExit")
+				f.Intrinsic.Control.ExitFor(v.Local.i)
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.Next(v.Local.i)
+	f.Intrinsic.Control.EndIf
+	
+f.Intrinsic.Control.EndIf
+
+gui.frmMaint.cmdsave.Enabled(true)
+
+f.Intrinsic.Control.Label("LabelExit")
+F.Data.DataView.close("DTHook","DVValidate")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.Ratetype_Validate.End
+
+Program.Sub.ReNumber_Lines.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+V.Local.iCount.Declare
+V.Local.i.Declare
+
+	F.Intrinsic.Control.For(V.Local.i,0,V.DataTable.DTHook.RowCount--,1)
+		F.Data.DataTable.SetValue("DTHook",V.Local.i,"LineNo",V.Local.i)
+	F.Intrinsic.Control.Next(V.Local.i)
+	
+	F.Data.DataTable.AcceptChanges("DTHook")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.ReNumber_Lines.End
+
+Program.Sub.Validate_Dayspill.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+v.Local.i.Declare
+v.Local.dtTransDate.Declare
+v.Local.sNewStartTime2.Declare
+v.Local.sFields.Declare
+v.Local.sNewEndTime.Declare
+v.Local.sNewEndTime2.Declare
+
+
+v.Local.sNewEndTime.Set("1/1/001 23:59")
+	v.Local.sNewStartTime2.Set("1/1/001 00:00")
+	
+'split hours spilling to next day
+F.Data.DataView.Create("DTJob","DVSpill",22,"StartTime2 > finishtime2","")
+f.Intrinsic.Control.for(v.Local.i,0,v.DataView.DTJob!DVSpill.RowCount--)
+'	v.Local.sStartTime.Set(v.DataView.DTJob!DVSpill(v.Local.i).StartTime!FieldVal)
+	
+	v.Local.sNewEndTime2.Set(v.DataView.DTJob!DVSpill(v.Local.i).finishtime!FieldVal)
+
+	f.Intrinsic.Date.DateAdd("d",1,v.DataView.DTJob!DVSpill(v.Local.i).date_Transaction!FieldVal,v.Local.dtTransDate)
+	
+	v.Local.sFields.set("date_Transaction*!*JOB*!*SUFFIX*!*Sequence*!*WorkCenter*!*flag_closed*!*Flag_Indirect*!*employee*!*pieces_good*!*StartTime*!*finishtime*!*dept_employee*!*Rate_type*!*Terminal_no*!*Sequence_key*!*jbo_from")
+	Function.Data.DataTable.AddRowByMap("DTJob",v.Local.sFields,v.Local.dtTransDate,v.DataView.DTJob!DVSpill(v.Local.i).JOB!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).SUFFIX!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).Sequence!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).WorkCenter!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).flag_closed!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).Flag_Indirect!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).employee!FieldVal,0,v.Local.sNewStartTime2,v.Local.sNewEndTime2,v.DataView.DTJob!DVSpill(v.Local.i).dept_employee!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).Rate_type!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).Terminal_no!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).Sequence_key!FieldVal,v.DataView.DTJob!DVSpill(v.Local.i).jbo_from!FieldVal)
+
+	Function.Data.Dataview.SetValue("DTJob","DVSpill",v.Local.i,"finishtime",v.Local.sNewEndTime)
+	
+f.Intrinsic.Control.Next(v.Local.i)
+f.Data.DataView.Close("DTJob","DVSpill")
+
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.Validate_Dayspill.End
+
+Program.Sub.Serialize.Start
+V.Local.sError.Declare(String)
+V.Local.sSerialize.Declare 
+
+gui.frmMaint.GsGridMaint.Serialize("GVHook",V.Local.sSerialize)
+F.Global.Registry.AddValue(V.Caller.User,V.Caller.CompanyCode,"GVHook",5673,1000,False,"Serialize",False,0,-999.0,1/1/1980,12:00:00 AM,V.Local.sSerialize)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.Serialize.End
+
+Program.Sub.Deserialize.Start
+V.Local.sError.Declare(String)
+
+V.Local.sSerialize.Declare 
+F.Global.Registry.ReadValue(V.Caller.User,V.Caller.CompanyCode,"GVHook",5673,1000,6,"",V.Local.sSerialize)
+F.Intrinsic.Control.If(V.Local.sSerialize.trim,<>,"")
+	gui.frmMaint.GsGridMaint.Deserialize(V.Local.sSerialize)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndTry
+Program.Sub.Deserialize.End
+
+Program.Sub.Error_Log.Start
+
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+V.Local.sFolder.Declare
+v.local.bExist.Declare
+V.Local.sFileExport.Declare
+
+	f.Intrinsic.String.Build("{0}\Custom\",v.Caller.GlobalDir,V.Local.sFolder)
+	f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bExist)
+	f.Intrinsic.Control.If(v.local.bExist,=,False)
+	    f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	    f.Intrinsic.String.Build("{0}5673\",V.Local.sFolder,V.Local.sFolder)
+	    f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	F.Intrinsic.Control.else
+		f.Intrinsic.String.Build("{0}5673\",V.Local.sFolder,V.Local.sFolder)
+		f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bExist)
+		f.Intrinsic.Control.If(v.local.bExist,=,False)
+	    	f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	    f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.String.Build("{0}GCG_5673_Errorlog.txt",V.Local.sFolder,V.Local.sFileExport)
+	f.Intrinsic.File.Exists(v.Local.sFileExport,v.Local.bExist)
+	f.Intrinsic.Control.If(v.Local.bExist,=,true)
+		f.Intrinsic.File.Append2FileNewLine(v.Local.sFileExport,v.Args.ERRMSG)
+	f.Intrinsic.Control.Else
+		f.Intrinsic.File.String2File(v.Local.sFileExport,v.Args.ERRMSG)
+	f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.End
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.Error_Log.End
+
+Program.Sub.Comments.Start
+${$0$}$GUI Script Maintenance$}$RAN$}$2/26/2018 4:34:11 PM$}$False
+Program.Sub.Comments.End
